@@ -12,13 +12,15 @@ use PHPUnit\Framework\TestCase;
 
 class PayloadMappingTest extends TestCase
 {
+    private const TEST_ULID = '01KRDW4ND6CN9Y7E0S3J0BVBTQ';
+
     #[Test]
     public function it_maps_contentpulse_item_to_shopify_payload(): void
     {
         $builder = new PublishPayloadBuilder(new HtmlRenderer);
 
         $item = ContentItem::fromApiResponse([
-            'id' => 42,
+            'id' => self::TEST_ULID,
             'slug' => 'test-shopify-article',
             'title' => 'Test Shopify Article',
             'body' => [
@@ -33,7 +35,8 @@ class PayloadMappingTest extends TestCase
 
         $payload = $builder->buildForShopify($item);
 
-        $this->assertSame(42, $payload['contentpulse_id']);
+        $this->assertSame(self::TEST_ULID, $payload['contentpulse_id']);
+        $this->assertIsString($payload['contentpulse_id']);
         $this->assertSame('Test Shopify Article', $payload['title']);
         $this->assertSame('test-shopify-article', $payload['slug']);
         $this->assertTrue($payload['published']);
@@ -47,7 +50,7 @@ class PayloadMappingTest extends TestCase
         $builder = new PublishPayloadBuilder(new HtmlRenderer);
 
         $item = ContentItem::fromApiResponse([
-            'id' => 1,
+            'id' => '01KRDW4ND6CN9Y7E0S3J0BVBTR',
             'slug' => 'draft',
             'title' => 'Draft',
             'body' => [],
@@ -57,5 +60,6 @@ class PayloadMappingTest extends TestCase
         $payload = $builder->buildForShopify($item);
 
         $this->assertFalse($payload['published']);
+        $this->assertIsString($payload['contentpulse_id']);
     }
 }
