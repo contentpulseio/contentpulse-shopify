@@ -8,6 +8,7 @@ use ContentPulse\Shopify\Services\ContentPulseBridge;
 use ContentPulse\Shopify\Services\Shopify\ArticleAdapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Throwable;
 
 /**
  * API endpoints for syncing ContentPulse content to Shopify stores.
@@ -26,16 +27,16 @@ class ContentSyncController
     {
         $request->validate([
             'shop' => 'required|string',
-            'content_id' => 'nullable|integer',
+            'content_id' => 'nullable|string|min:1|max:64',
         ]);
 
-        $shop = $request->input('shop');
+        $shop = (string) $request->input('shop');
 
         try {
             if ($request->filled('content_id')) {
                 $result = $this->bridge->syncSingleContent(
                     $shop,
-                    (int) $request->input('content_id'),
+                    (string) $request->input('content_id'),
                 );
             } else {
                 $result = $this->bridge->syncAllContent($shop);
@@ -46,7 +47,7 @@ class ContentSyncController
                 'synced' => $result['synced'] ?? 0,
                 'errors' => $result['errors'] ?? [],
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sync failed: '.$e->getMessage(),

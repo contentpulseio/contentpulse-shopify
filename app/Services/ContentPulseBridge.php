@@ -12,6 +12,7 @@ use ContentPulse\Rendering\HtmlRenderer;
 use ContentPulse\Shopify\Services\Shopify\ArticleAdapter;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Throwable;
 
 /**
  * The bridge between ContentPulse SDK and Shopify.
@@ -33,7 +34,7 @@ class ContentPulseBridge
         string $apiKey,
         ?LoggerInterface $logger = null,
     ) {
-        $this->client = new ContentPulseClient($apiUrl, $apiKey);
+        $this->client = new ContentPulseClient(apiKey: $apiKey, baseUrl: $apiUrl);
         $this->payloadBuilder = new PublishPayloadBuilder(new HtmlRenderer);
         $this->logger = $logger ?? new NullLogger;
     }
@@ -60,7 +61,7 @@ class ContentPulseBridge
                 try {
                     $this->publishToShopify($shopDomain, $item);
                     $synced++;
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     $errors[] = "Content #{$item->id}: {$e->getMessage()}";
                     $this->logger->error('ContentPulse Shopify sync failed for item', [
                         'content_id' => $item->id,
@@ -77,18 +78,18 @@ class ContentPulseBridge
     }
 
     /**
-     * Sync a single content item by ID.
+     * Sync a single content item by its public ULID.
      *
      * @return array{synced: int, errors: array<string>}
      */
-    public function syncSingleContent(string $shopDomain, int $contentId): array
+    public function syncSingleContent(string $shopDomain, string $contentId): array
     {
         try {
             $item = $this->client->getContentById($contentId);
             $this->publishToShopify($shopDomain, $item);
 
             return ['synced' => 1, 'errors' => []];
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return ['synced' => 0, 'errors' => [$e->getMessage()]];
         }
     }

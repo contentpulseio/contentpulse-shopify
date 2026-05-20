@@ -30,7 +30,8 @@ class ArticleAdapter
      */
     public function upsertArticle(string $shopDomain, array $payload): array
     {
-        $contentPulseId = $payload['contentpulse_id'] ?? null;
+        $rawContentPulseId = $payload['contentpulse_id'] ?? null;
+        $contentPulseId = $rawContentPulseId === null ? null : (string) $rawContentPulseId;
         $existingArticleId = $this->findArticleByContentPulseId($shopDomain, $contentPulseId);
 
         $articleData = [
@@ -82,9 +83,9 @@ class ArticleAdapter
         return true;
     }
 
-    private function findArticleByContentPulseId(string $shopDomain, int|string|null $contentPulseId): ?int
+    private function findArticleByContentPulseId(string $shopDomain, ?string $contentPulseId): ?int
     {
-        if ($contentPulseId === null) {
+        if ($contentPulseId === null || trim($contentPulseId) === '') {
             return null;
         }
 
@@ -113,7 +114,7 @@ class ArticleAdapter
         // Placeholder: Use Shopify REST/GraphQL API to update article
     }
 
-    private function storeContentPulseMapping(string $shopDomain, int $articleId, int|string $contentPulseId): void
+    private function storeContentPulseMapping(string $shopDomain, int $articleId, string $contentPulseId): void
     {
         $this->logger->info('Storing ContentPulse mapping', [
             'shop' => $shopDomain,
